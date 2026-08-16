@@ -19,7 +19,7 @@ jobs:
         cat <<EOF > project.yml
         name: CreatureGame
         options:
-          xcodeVersion: "15.4"
+          xcodeVersion: "15.0"
         targets:
           CreatureGame:
             type: application
@@ -38,6 +38,7 @@ jobs:
         EOF
         
         xcodegen generate
+        sed -i '' 's/objectVersion = [0-9]*/objectVersion = 60/g' CreatureGame.xcodeproj/project.pbxproj
 
     - name: Build App
       run: |
