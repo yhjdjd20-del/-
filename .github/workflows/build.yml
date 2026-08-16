@@ -18,6 +18,8 @@ jobs:
         
         cat <<EOF > project.yml
         name: CreatureGame
+        options:
+          xcodeVersion: "15.4"
         targets:
           CreatureGame:
             type: application
