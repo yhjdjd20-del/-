@@ -14,20 +14,16 @@ jobs:
 
     - name: Compile and Package
       run: |
-        # 1. Компилируем Swift код напрямую в бинарник iOS
         swiftc CreatureGameApp.swift \
           -o CreatureGame \
           -target arm64-apple-ios17.0 \
           -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
           -parse-as-library
 
-        # 2. Создаем структуру системных папок
         mkdir -p Payload/CreatureGame.app
 
-        # 3. Перемещаем бинарник в папку приложения
         mv CreatureGame Payload/CreatureGame.app/
 
-        # 4. Генерируем обязательный файл Info.plist
         cat <<EOF > Payload/CreatureGame.app/Info.plist
         <?xml version="1.0" encoding="UTF-8"?>
         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -39,21 +35,24 @@ jobs:
             <string>com.fedor.creaturegame</string>
             <key>CFBundleName</key>
             <string>CreatureGame</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
             <key>CFBundleVersion</key>
             <string>1.0</string>
             <key>CFBundleShortVersionString</key>
             <string>1.0</string>
             <key>MinimumOSVersion</key>
             <string>17.0</string>
-            <key>UILaunchStoryboardName</key>
-            <string>LaunchScreen</string>
-            <key>UIRequiresFullScreen</key>
-            <true/>
+            <key>UILaunchScreen</key>
+            <dict/>
+            <key>UISupportedInterfaceOrientations</key>
+            <array>
+                <string>UIInterfaceOrientationPortrait</string>
+            </array>
         </dict>
         </plist>
         EOF
 
-        # 5. Упаковываем все это в unsigned .ipa архив
         zip -r CreatureGame-Unsigned.ipa Payload
 
     - name: Upload Artifact
