@@ -12,47 +12,47 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Compile and Package
+    - name: Generate Xcode Project
       run: |
-        swiftc CreatureGameApp.swift \
-          -o CreatureGame \
-          -target arm64-apple-ios17.0 \
-          -sdk $(xcrun --sdk iphoneos --show-sdk-path) \
-          -parse-as-library
-
-        mkdir -p Payload/CreatureGame.app
-
-        mv CreatureGame Payload/CreatureGame.app/
-
-        cat <<EOF > Payload/CreatureGame.app/Info.plist
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>CreatureGame</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.fedor.creaturegame</string>
-            <key>CFBundleName</key>
-            <string>CreatureGame</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>CFBundleVersion</key>
-            <string>1.0</string>
-            <key>CFBundleShortVersionString</key>
-            <string>1.0</string>
-            <key>MinimumOSVersion</key>
-            <string>17.0</string>
-            <key>UILaunchScreen</key>
-            <dict/>
-            <key>UISupportedInterfaceOrientations</key>
-            <array>
-                <string>UIInterfaceOrientationPortrait</string>
-            </array>
-        </dict>
-        </plist>
+        brew install xcodegen
+        
+        cat <<EOF > project.yml
+        name: CreatureGame
+        targets:
+          CreatureGame:
+            type: application
+            platform: iOS
+            deploymentTarget: "17.0"
+            sources: 
+              - CreatureGameApp.swift
+            settings:
+              GENERATE_INFOPLIST_FILE: YES
+              PRODUCT_BUNDLE_IDENTIFIER: com.fedor.creaturegame
+              CURRENT_PROJECT_VERSION: "1.0"
+              MARKETING_VERSION: "1.0"
+              INFOPLIST_KEY_UILaunchScreen_Generation: YES
+              INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+              INFOPLIST_KEY_LSRequiresIPhoneOS: YES
         EOF
+        
+        xcodegen generate
 
+    - name: Build App
+      run: |
+        xcodebuild clean build \
+          -project CreatureGame.xcodeproj \
+          -scheme CreatureGame \
+          -configuration Release \
+          -sdk iphoneos \
+          -derivedDataPath build \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Package IPA
+      run: |
+        mkdir -p Payload
+        cp -r build/Build/Products/Release-iphoneos/CreatureGame.app Payload/
         zip -r CreatureGame-Unsigned.ipa Payload
 
     - name: Upload Artifact
