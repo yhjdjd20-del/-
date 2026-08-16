@@ -1,0 +1,26 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Build unsigned IPA
+      run: |
+        swift build -c release --arch arm64 -Xswiftc -sdk -Xswiftc $(xcrun --sdk iphoneos --show-sdk-path)
+        mkdir -p Payload
+        cp -r .build/arm64-apple-macosx/release/CreatureGame.app Payload/
+        zip -r CreatureGame-Unsigned.ipa Payload
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: CreatureGame-IPA
+        path: CreatureGame-Unsigned.ipa
